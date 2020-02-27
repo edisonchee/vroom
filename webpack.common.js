@@ -4,13 +4,14 @@ const webpack = require("webpack");
 const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const CopyWebpackPlugin = require('copy-webpack-plugin')
 const devMode = process.env.NODE_ENV !== "production";
 
 module.exports = {
   entry: ["./src/app/index.js"],
 
   output: {
-    filename: "dist/js/bundle-[hash].js",
+    filename: "js/bundle-[hash].js",
     path: path.resolve(__dirname, "dist"),
     publicPath: "/"
   },
@@ -37,22 +38,16 @@ module.exports = {
         use: ["css-loader", "sass-loader"],
       },
       {
-        test: /\.(jpeg|jpg|gif|png)$/i,
-        loader: "file-loader",
-        options: {
-          name: "[name].[ext]",
-          outputPath: "images/",
-          publicPath: "images/"
-        }
+        test: /\.(png|jpe?g|gif)$/i,
+        use: ["file-loader"],
       },
       {
         test: /\.(eot|otf|svg|ttf|woff|woff2)$/i,
-        loader: "file-loader",
-        options: {
-          name: "[name].[ext]",
-          outputPath: "fonts/",
-          publicPath: "fonts/"
-        }
+        use: ["file-loader"],
+      },
+      {
+        test: /\.(json)$/i,
+        use: ["file-loader"],
       }
     ]
   },
@@ -60,10 +55,16 @@ module.exports = {
   plugins: [
     new webpack.optimize.ModuleConcatenationPlugin(),
 
+    new CopyWebpackPlugin([{
+      from: 'src/app/assets',
+      to: 'assets'
+    }]),
+
     new HtmlWebpackPlugin({
       title: "Vroom",
       template: "templates/index.ejs",
-      favicon: "templates/favicon.ico"
+      favicon: "templates/favicon.ico",
+      inject: false
     }),
 
     new MiniCssExtractPlugin({
