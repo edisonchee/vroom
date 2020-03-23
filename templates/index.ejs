@@ -36,6 +36,14 @@
 <% } %>
 <% } %>
 
+<div id="canvas-container">
+
+  <aside id="sidebar">
+    <h2>Chat</h2>
+    <ul id="chat-log"></ul>
+  </aside>
+</div>
+
 <% if (htmlWebpackPlugin.options.window) { %>
 <script>
   <% for (var varName in htmlWebpackPlugin.options.window) { %>

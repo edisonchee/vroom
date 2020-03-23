@@ -1,29 +1,50 @@
 import * as PIXI from 'pixi.js';
+import io from 'socket.io-client';
 
-const app = new PIXI.Application({ 
+const socket = io('http://localhost:7777', {
+  path: '/ws'
+});
+
+socket.on('connect', () => {
+  socket.on('update', data => {
+    console.log(data);
+  })
+  socket.emit('setUsername', { username: 'random user' });
+});
+
+var DOM_EL = {
+  canvasContainer: null
+}
+
+var app = new PIXI.Application({
   width: 800,
   height: 600,
   antialias: true,
   transparent: true,
-  resolution: 1
+  resolution: 1,
 });
+
 const loader = PIXI.Loader.shared;
 let id, state, animatedBlob;
 
+window.addEventListener('DOMContentLoaded', (event) => {
+  DOM_EL.canvasContainer = document.getElementById("canvas-container");
+  
+  DOM_EL.canvasContainer.appendChild(app.view);
+
+  loader.add("assets/spritesheet.json")
+    .load((loader, resources) => {
+      id = resources["assets/spritesheet.json"].textures;
+
+      setup();
+    });
+});
+
 // app.renderer.backgroundColor = 0x000000;
-
-document.body.appendChild(app.view);
-
-loader.add("assets/spritesheet.json")
-  .load((loader, resources) => {
-    id = resources["assets/spritesheet.json"].textures;
-
-    setup();
-  });
 
 function setup() {
   // let blob = new PIXI.Sprite(id["blob_1.png"]);
-  
+
   // app.stage.addChild(blob);
   animatedBlob = createAnimatedSprites("blob", 1, 7);
   app.stage.addChild(animatedBlob);

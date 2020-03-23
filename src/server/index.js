@@ -1,14 +1,15 @@
-var restify = require('restify');
+const io = require('socket.io')(7777, {
+  path: '/ws'
+});
 
-function respond(req, res, next) {
-  res.send('hello ' + req.params.name);
-  next();
-}
+let users = [];
 
-var server = restify.createServer();
-server.get('/hello/:name', respond);
-server.head('/hello/:name', respond);
+io.on('connection', socket => {
+  socket.emit('update', { data: "hello world" });
 
-server.listen(7777, function() {
-  console.log('%s listening at %s', server.name, server.url);
+  socket.on('setUsername', data => {
+    console.log(`Socket ${socket.id} setUsername: ${data.username}`);
+    users.push({ socketId: socket.id, username: data.username });
+    console.log(users);
+  })
 });

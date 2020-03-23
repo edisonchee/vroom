@@ -8,7 +8,7 @@ const CopyWebpackPlugin = require('copy-webpack-plugin')
 const devMode = process.env.NODE_ENV !== "production";
 
 module.exports = {
-  entry: ["./src/app/index.js", "./src/app/css/style.css"],
+  entry: ["./src/app/index.js", "./src/app/css/style.scss"],
 
   output: {
     filename: "js/bundle-[hash].js",
