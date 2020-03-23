@@ -9,7 +9,8 @@ socket.on('connect', () => {
   socket.on('update', data => {
     console.log(data);
   })
-  socket.emit('setUsername', { username: 'random user' });
+  socket.emit('createUser', { username: 'random user' });
+  // socket.emit('setUsername', { username: 'random user 2' });
 });
 
 var DOM_EL = {
