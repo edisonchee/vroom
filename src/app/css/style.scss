@@ -34,8 +34,55 @@ body {
     background: #f2f2f2;
     border: 1px solid #aaa;
     border-left: none;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+
     h2 {
       margin: 1rem 0 0 1rem;
+    }
+
+    #username {
+      margin: 0.25rem 0 0 1rem;
+      font-size: 0.75rem;
+      color: #aaa;
+    }
+
+    #chat-log {
+      margin: 1rem;
+      padding: 0;
+      height: 100%;
+      position: relative;
+      overflow-y: scroll;
+      list-style-type: none;
+      background: white;
+
+      li {
+        padding: 0.5rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        margin: 0;
+        border-bottom: 1px solid #f2f2f2;
+
+        &:last-child {
+          margin-bottom: 4rem;
+        }
+
+        .username {
+          color: #666;
+          font-size: 0.75rem;
+          margin: 0 0 0.15rem 0;
+        }
+      }
+    }
+
+    #chat-input-container {
+      display: flex;
+      
+      #chat-input {
+        width: 100%;
+      }
     }
   }
 }

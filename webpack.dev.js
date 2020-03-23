@@ -14,6 +14,8 @@ module.exports = merge(common, {
     historyApiFallback: true,
     compress: true,
     publicPath: "/",
+    host: "192.168.1.249",
+    port: 8080,
     proxy: {
       "/v1": {
         target: apiUrl,

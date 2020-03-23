@@ -1,23 +1,31 @@
 import * as PIXI from 'pixi.js';
 import io from 'socket.io-client';
 
-const socket = io('http://localhost:7777', {
+const socket = io('http://192.168.1.249:7777', {
   path: '/ws'
 });
 
 socket.on('connect', () => {
-  socket.on('update', data => {
-    console.log(data);
-  })
-  socket.emit('createUser', { username: 'random user' });
-  // socket.emit('setUsername', { username: 'random user 2' });
+  socket.on('createUser', user => {
+    DOM_EL.username.innerText = `Your display name is: ${user.username}`;
+    console.log(`Socket ID: ${user.socketId}\nUsername: ${user.username}`);
+  });
 });
 
-var DOM_EL = {
-  canvasContainer: null
+socket.on('sendMessage', data => {
+  printMessage(data);
+  DOM_EL.chatLog.scrollTop = DOM_EL.chatLog.scrollHeight;
+})
+
+let DOM_EL = {
+  canvasContainer: null,
+  username: null,
+  chatLog: null,
+  chatInput: null,
+  chatInputButton: null
 }
 
-var app = new PIXI.Application({
+let app = new PIXI.Application({
   width: 800,
   height: 600,
   antialias: true,
@@ -30,6 +38,12 @@ let id, state, animatedBlob;
 
 window.addEventListener('DOMContentLoaded', (event) => {
   DOM_EL.canvasContainer = document.getElementById("canvas-container");
+  DOM_EL.username = document.getElementById("username");
+  DOM_EL.chatLog = document.getElementById("chat-log");
+  DOM_EL.chatInput = document.getElementById("chat-input");
+  DOM_EL.chatInputButton = document.getElementById("chat-input-button");
+
+  DOM_EL.chatInputButton.addEventListener('click', sendMessage);
   
   DOM_EL.canvasContainer.appendChild(app.view);
 
@@ -180,4 +194,24 @@ function keyboard(value) {
   };
   
   return key;
+}
+
+const sendMessage = evt => {
+  socket.emit('sendMessage', DOM_EL.chatInput.value);
+}
+
+const printMessage = data => {
+  let listEl = document.createElement('li');
+  let usernameSpanEl = document.createElement('span');
+  let textSpanEl = document.createElement('span');
+
+  usernameSpanEl.classList.add('username');
+  usernameSpanEl.innerText = data.username;
+  textSpanEl.classList.add('text');
+  textSpanEl.innerText = data.msg;
+
+  listEl.appendChild(usernameSpanEl);
+  listEl.appendChild(textSpanEl);
+
+  DOM_EL.chatLog.appendChild(listEl);
 }
