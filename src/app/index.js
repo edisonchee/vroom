@@ -1,5 +1,6 @@
 import * as PIXI from 'pixi.js';
-import { sendMessage } from './components/websockets.js';
+import { sendMessage, sendPos } from './components/websockets.js';
+const loader = PIXI.Loader.shared;
 
 export let DOM_EL = {
   canvasContainer: null,
@@ -17,8 +18,7 @@ let app = new PIXI.Application({
   resolution: 1,
 });
 
-const loader = PIXI.Loader.shared;
-let id, state, animatedBlob;
+export let id, state, animatedBlob;
 
 window.addEventListener('DOMContentLoaded', (event) => {
   DOM_EL.canvasContainer = document.getElementById("canvas-container");
@@ -42,6 +42,7 @@ window.addEventListener('DOMContentLoaded', (event) => {
 function setup() {
   animatedBlob = createAnimatedSprites("blob", 1, 7);
   app.stage.addChild(animatedBlob);
+  setInterval(sendPos, 1000);
 
   let left = keyboard("ArrowLeft"),
       up = keyboard("ArrowUp"),

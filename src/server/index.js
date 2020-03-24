@@ -6,9 +6,11 @@ const decoder = new TextDecoder('utf-8');
 
 const MESSAGE_ENUM = Object.freeze({
   SELF_CONNECTED: "SELF_CONNECTED",
+  SELF_UPDATE: "SELF_UPDATE",
   CLIENT_CONNECTED: "CLIENT_CONNECTED",
   CLIENT_DISCONNECTED: "CLIENT_DISCONNECTED",
   CLIENT_MESSAGE: "CLIENT_MESSAGE",
+  CLIENT_UPDATE: "CLIENT_UPDATE",
   PING: "PING",
   PONG: "PONG"
 })
@@ -24,10 +26,15 @@ const app = uWS.App()
     open: (ws, req) => {
       ws.id = uuid();
       ws.name = createName(getRandomInt());
+      ws.pos = {
+        x: 0,
+        y: 0
+      };
 
       ws.subscribe(MESSAGE_ENUM.CLIENT_CONNECTED);
       ws.subscribe(MESSAGE_ENUM.CLIENT_DISCONNECTED);
       ws.subscribe(MESSAGE_ENUM.CLIENT_MESSAGE);
+      ws.subscribe(MESSAGE_ENUM.CLIENT_UPDATE);
 
       sockets.push(ws);
       console.log(sockets);
@@ -57,11 +64,15 @@ const app = uWS.App()
       clientMessage.message_type === MESSAGE_ENUM.PING ? '' : console.log(clientMessage);
       
       switch (clientMessage.message_type) {
+        case MESSAGE_ENUM.SELF_UPDATE:
+          updatePos(ws, clientMessage.body.x, clientMessage.body.y);
+          break;
         case MESSAGE_ENUM.PING:
           serverMessage = {
             message_type: MESSAGE_ENUM.PONG
           };
           ws.send(JSON.stringify(serverMessage));
+          break;
         case MESSAGE_ENUM.CLIENT_MESSAGE:
           serverMessage = {
             message_type: clientMessage.message_type,
@@ -84,7 +95,17 @@ const app = uWS.App()
           sockets.splice(index, 1);
         }
       });
+
+      let pubMsg = {
+        message_type: MESSAGE_ENUM.CLIENT_DISCONNECTED,
+        body: {
+          id: ws.id,
+          name: ws.name
+        }
+      }
+
       console.log(sockets);
+      app.publish(MESSAGE_ENUM.CLIENT_DISCONNECTED, JSON.stringify(pubMsg));
     }
   }).any('/*', (res, req) => {
     console.log(req);
@@ -103,6 +124,26 @@ function createName(randomInt) {
   `user-${randomInt}`
 }
 
+function updatePos(ws, xPos, yPos) {
+  sockets.find((socket, index) => {
+    if (socket && socket.id === ws.id) {
+      sockets[index].x = xPos;
+      sockets[index].y = yPos;
+    }
+  });
+}
+
 function getRandomInt() {
   return Math.floor(Math.random() * Math.floor(9999));
 }
+
+function tick() {
+  let pubMsg = {
+    message_type: MESSAGE_ENUM.CLIENT_UPDATE,
+    body: { sockets: sockets }
+  }
+
+  app.publish(MESSAGE_ENUM.CLIENT_UPDATE, JSON.stringify(pubMsg));
+}
+
+setInterval(tick, 1000);

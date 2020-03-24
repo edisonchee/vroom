@@ -1,11 +1,13 @@
-import { DOM_EL } from '../index';
+import { DOM_EL, animatedBlob } from '../index';
 export const ws = new WebSocket("ws://127.0.0.1:7777/ws");
 
 const MESSAGE_ENUM = Object.freeze({
   SELF_CONNECTED: "SELF_CONNECTED",
+  SELF_UPDATE: "SELF_UPDATE",
   CLIENT_CONNECTED: "CLIENT_CONNECTED",
   CLIENT_DISCONNECTED: "CLIENT_DISCONNECTED",
   CLIENT_MESSAGE: "CLIENT_MESSAGE",
+  CLIENT_UPDATE: "CLIENT_UPDATE",
   PING: "PING",
   PONG: "PONG"
 })
@@ -21,6 +23,9 @@ ws.onopen = evt =>{
     switch (msg.message_type) {
       case MESSAGE_ENUM.PONG:
         wsTimeout = setTimeout(ping, 10000);
+        break;
+      case MESSAGE_ENUM.CLIENT_UPDATE:
+        console.log(msg.body);
         break;
       case MESSAGE_ENUM.CLIENT_CONNECTED:
         console.log(msg.body);
@@ -48,6 +53,18 @@ const ping = () => {
   let msg = {
     message_type: MESSAGE_ENUM.PING
   }
+  ws.send(JSON.stringify(msg));
+}
+
+export const sendPos = () => {
+  let msg = {
+    message_type: MESSAGE_ENUM.SELF_UPDATE,
+    body: {
+      x: animatedBlob.x,
+      y: animatedBlob.y
+    }
+  }
+
   ws.send(JSON.stringify(msg));
 }
 
