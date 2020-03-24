@@ -2,9 +2,16 @@ const uWS = require('./uws.js');
 const { uuid } = require('uuidv4');
 const port = 7777;
 
-const MESSAGE_TYPES = {
-  CLIENT_CONNECTED: 1,
-}
+const decoder = new TextDecoder('utf-8');
+
+const MESSAGE_ENUM = Object.freeze({
+  SELF_CONNECTED: "SELF_CONNECTED",
+  CLIENT_CONNECTED: "CLIENT_CONNECTED",
+  CLIENT_DISCONNECTED: "CLIENT_DISCONNECTED",
+  CLIENT_MESSAGE: "CLIENT_MESSAGE",
+  PING: "PING",
+  PONG: "PONG"
+})
 
 let sockets = [];
 
@@ -12,30 +19,62 @@ const app = uWS.App()
   .ws('/ws', {
     compression: 0,
     maxPayloadLength: 16 * 1024 * 1024,
-    idleTimeout: 10,
+    idleTimeout: 15,
 
     open: (ws, req) => {
       ws.id = uuid();
-      ws.name = getName(getRandomInt());
+      ws.name = createName(getRandomInt());
 
-      ws.subscribe('CLIENT_CONNECTED');
+      ws.subscribe(MESSAGE_ENUM.CLIENT_CONNECTED);
+      ws.subscribe(MESSAGE_ENUM.CLIENT_DISCONNECTED);
+      ws.subscribe(MESSAGE_ENUM.CLIENT_MESSAGE);
 
       sockets.push(ws);
+      console.log(sockets);
 
-      let msg = {
-        message_type: 'CLIENT_CONNECTED',
-        data: ws
+      let socketMsg = {
+        message_type: MESSAGE_ENUM.SELF_CONNECTED,
+        body: {
+          name: ws.name
+        }
       }
 
-      app.publish('CLIENT_CONNECTED', JSON.stringify(msg));
+      let pubMsg = {
+        message_type: MESSAGE_ENUM.CLIENT_CONNECTED,
+        body: {
+          id: ws.id,
+          name: ws.name
+        }
+      }
+
+      ws.send(JSON.stringify(socketMsg));
+      app.publish(MESSAGE_ENUM.CLIENT_CONNECTED, JSON.stringify(pubMsg));
     },
     message: (ws, message, isBinary) => {
       // message from client
-      console.log(message);
-      /* Ok is false if backpressure was built up, wait for drain */
-      // let ok = ws.send(JSON.stringify(ws), isBinary);
+      let clientMessage = JSON.parse(decoder.decode(message));
+      let serverMessage = {};
+      clientMessage.message_type === MESSAGE_ENUM.PING ? '' : console.log(clientMessage);
+      
+      switch (clientMessage.message_type) {
+        case MESSAGE_ENUM.PING:
+          serverMessage = {
+            message_type: MESSAGE_ENUM.PONG
+          };
+          ws.send(JSON.stringify(serverMessage));
+        case MESSAGE_ENUM.CLIENT_MESSAGE:
+          serverMessage = {
+            message_type: clientMessage.message_type,
+            sender: ws.name,
+            body: clientMessage.body
+          };
+          app.publish(serverMessage.message_type, JSON.stringify(serverMessage));
+          break;
+        default:
+          console.log("Unknown message type");
+      }
     },
-    drain: (ws) => {
+    drain: ws => {
 
     },
     close: (ws, code, message) => {
@@ -58,9 +97,9 @@ const app = uWS.App()
     }
   });
 
-function getName(randomInt) {
+function createName(randomInt) {
   return sockets.find(ws => ws.name === `user-${randomInt}`) ? 
-  createUser(getRandomInt()) : 
+  createName(getRandomInt()) : 
   `user-${randomInt}`
 }
 
