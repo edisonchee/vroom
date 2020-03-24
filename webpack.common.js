@@ -8,7 +8,7 @@ const CopyWebpackPlugin = require('copy-webpack-plugin')
 const devMode = process.env.NODE_ENV !== "production";
 
 module.exports = {
-  entry: ["./src/app/index.js", "./src/app/css/style.scss"],
+  entry: ["./src/app/index.js", "./src/app/static/scss/style.scss"],
 
   output: {
     filename: "js/bundle-[hash].js",
@@ -56,8 +56,8 @@ module.exports = {
     new webpack.optimize.ModuleConcatenationPlugin(),
 
     new CopyWebpackPlugin([{
-      from: 'src/app/assets',
-      to: 'assets'
+      from: 'src/app/static/assets',
+      to: 'static/assets'
     }]),
 
     new HtmlWebpackPlugin({
