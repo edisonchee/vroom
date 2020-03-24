@@ -1,21 +1,14 @@
 import * as PIXI from 'pixi.js';
-import io from 'socket.io-client';
+var ws = new WebSocket("ws://127.0.0.1:7777/ws");
 
-const socket = io('http://192.168.1.249:7777', {
-  path: '/ws'
-});
+ws.onopen = evt =>{
+  console.log(evt.explicitOriginalTarget.url);
+  ws.send("test");
 
-socket.on('connect', () => {
-  socket.on('createUser', user => {
-    DOM_EL.username.innerText = `Your display name is: ${user.username}`;
-    console.log(`Socket ID: ${user.socketId}\nUsername: ${user.username}`);
-  });
-});
-
-socket.on('sendMessage', data => {
-  printMessage(data);
-  DOM_EL.chatLog.scrollTop = DOM_EL.chatLog.scrollHeight;
-})
+  ws.onmessage = evt => {
+    console.log(JSON.parse(evt.data));
+  };
+};
 
 let DOM_EL = {
   canvasContainer: null,

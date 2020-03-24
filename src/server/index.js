@@ -1,52 +1,67 @@
-const server = require('http').createServer();
-const io = require('socket.io')(server, {
-  path: '/ws'
-});
+const uWS = require('./uws.js');
+const { uuid } = require('uuidv4');
+const port = 7777;
 
-server.listen({ host: "192.168.1.249", port: 7777 });
-
-let users = [];
-
-io.on('connection', socket => {
-  let user = createUser(socket.id, getRandomInt());
-  user ? socket.emit('createUser', user) : '';
-
-  socket.on('setUsername', data => {
-    users.find((user, index) => {
-      if (user.socketId === socket.id) {
-        users[index]['username'] = data.username;
-      }
-    });
-    console.log('setUsername: ', users);
-  });
-
-  socket.on('sendMessage', data => {
-    io.emit('sendMessage', { username: getUsername(socket.id), msg: data });
-  })
-
-  socket.on('disconnect', () => {
-    users.find((user, index) => {
-      if (user && user.socketId === socket.id) {
-        users.splice(index, 1);
-      }
-    });
-  })
-});
-
-function getUsername(socketId) {
-  let user = users.find((user => user.socketId === socketId));
-  return user.username;
+const MESSAGE_TYPES = {
+  CLIENT_CONNECTED: 1,
 }
 
-function createUser(socketId, randomInt) {
-  let found = users.find(user => user.username === `user-${randomInt}`);
-  if (found) {
-    createUser(socket.id, getRandomInt());
-  } else {
-    let user = { socketId: socketId, username: `user-${getRandomInt()}` };
-    users.push(user);
-    return user;
-  }
+let sockets = [];
+
+const app = uWS.App()
+  .ws('/ws', {
+    compression: 0,
+    maxPayloadLength: 16 * 1024 * 1024,
+    idleTimeout: 10,
+
+    open: (ws, req) => {
+      ws.id = uuid();
+      ws.name = getName(getRandomInt());
+
+      ws.subscribe('CLIENT_CONNECTED');
+
+      sockets.push(ws);
+
+      let msg = {
+        message_type: 'CLIENT_CONNECTED',
+        data: ws
+      }
+
+      app.publish('CLIENT_CONNECTED', JSON.stringify(msg));
+    },
+    message: (ws, message, isBinary) => {
+      // message from client
+      console.log(message);
+      /* Ok is false if backpressure was built up, wait for drain */
+      // let ok = ws.send(JSON.stringify(ws), isBinary);
+    },
+    drain: (ws) => {
+
+    },
+    close: (ws, code, message) => {
+      /* The library guarantees proper unsubscription at close */
+      sockets.find((socket, index) => {
+        if (socket && socket.id === ws.id) {
+          sockets.splice(index, 1);
+        }
+      });
+      console.log(sockets);
+    }
+  }).any('/*', (res, req) => {
+    console.log(req);
+    res.end('Nothing to see here!');
+  }).listen(port, token => {
+    if (token) {
+      console.log('Listening to port ' + port);
+    } else {
+      console.log('Failed to listen to port ' + port);
+    }
+  });
+
+function getName(randomInt) {
+  return sockets.find(ws => ws.name === `user-${randomInt}`) ? 
+  createUser(getRandomInt()) : 
+  `user-${randomInt}`
 }
 
 function getRandomInt() {
