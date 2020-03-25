@@ -36,10 +36,10 @@ ws.onopen = evt =>{
         break;
       case MESSAGE_ENUM.CLIENT_DISCONNECTED:
         logMessage(msg);
-        // update game state
-        removePlayer(msg.body);
         // remove sprite
         removePlayerSprite(msg.body);
+        // update game state
+        removePlayer(msg.body);
         break;
       case MESSAGE_ENUM.CLIENT_MESSAGE:
         printMessage(msg);
