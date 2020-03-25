@@ -73,7 +73,7 @@ const app = uWS.App()
       // message from client
       let clientMessage = JSON.parse(decoder.decode(message));
       let serverMessage = {};
-      clientMessage.message_type === MESSAGE_ENUM.PING ? '' : console.log(clientMessage);
+      // clientMessage.message_type === MESSAGE_ENUM.PING ? '' : console.log(clientMessage);
       
       switch (clientMessage.message_type) {
         case MESSAGE_ENUM.SELF_UPDATE:
@@ -158,4 +158,4 @@ function tick() {
   app.publish(MESSAGE_ENUM.CLIENT_UPDATE, JSON.stringify(pubMsg));
 }
 
-setInterval(tick, 1000);
+setInterval(tick, 100);

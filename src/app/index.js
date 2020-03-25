@@ -76,7 +76,7 @@ export function setupSelfChar() {
   animatedSprite = createAnimatedSprite(selfData.char, char.startFrame, char.endFrame);
   app.stage.addChild(animatedSprite);
 
-  setInterval(sendPos, 1000);
+  setInterval(sendPos, 100);
 
   let left = keyboard("ArrowLeft"),
       up = keyboard("ArrowUp"),
@@ -130,7 +130,6 @@ export function setupSelfChar() {
   state = play;
   app.ticker.add(delta => gameLoop(delta));
 }
-
 
 export function createPlayerSprite(socket) {
   // don't create player sprite for myself again
@@ -190,6 +189,12 @@ function play(delta) {
   // update self pos
   selfData.pos.x = animatedSprite.x;
   selfData.pos.y = animatedSprite.y;
+  players.forEach(player => {
+    if (player.sprite) {
+      player.sprite.x = player.sprite.x + Math.round((player.pos.x - player.sprite.x) * 0.2);
+      player.sprite.y = player.sprite.y + Math.round((player.pos.y - player.sprite.y) * 0.2);
+    }
+  })
 }
 
 export function updatePlayers(socketsArr) {
@@ -199,8 +204,6 @@ export function updatePlayers(socketsArr) {
       if (player.id === socketsArr[i].id && player.sprite) {
         player.pos.x = socketsArr[i].pos.x;
         player.pos.y = socketsArr[i].pos.y;
-        player.sprite.x = player.pos.x;
-        player.sprite.y = player.pos.y;
       }
     })
   }
@@ -247,7 +250,7 @@ function loadAssets() {
     });
 
     loader.onError.add(() => {
-      reject(new Error("Assets cannot be loaded"));
+      reject(new Error("Spritesheet.json cannot be loaded"));
     });
   })
 }
