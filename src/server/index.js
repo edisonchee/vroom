@@ -42,13 +42,17 @@ const app = uWS.App()
       sockets.push(ws);
       console.log(sockets);
 
+      // SELF_CONNECTED sent to self only ONCE upon ws open
       let socketMsg = {
         message_type: MESSAGE_ENUM.SELF_CONNECTED,
         body: {
-          id: ws.id,
-          name: ws.name,
-          char: ws.char,
-          pos: ws.pos
+          self: {
+            id: ws.id,
+            name: ws.name,
+            char: ws.char,
+            pos: ws.pos
+          },
+          sockets: sockets
         }
       }
 

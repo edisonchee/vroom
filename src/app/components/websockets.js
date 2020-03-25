@@ -1,5 +1,6 @@
-import { DOM_EL, selfData, addPlayer, removePlayer, updatePlayers, createPlayerSprite, removePlayerSprite } from '../index';
-export const ws = new WebSocket("ws://127.0.0.1:7777/ws");
+import { DOM_EL, selfData, syncStates, addPlayer, removePlayer, updatePlayers, createPlayerSprite, removePlayerSprite, setupSelfChar } from '../index';
+
+let ws;
 
 const MESSAGE_ENUM = Object.freeze({
   SELF_CONNECTED: "SELF_CONNECTED",
@@ -14,48 +15,53 @@ const MESSAGE_ENUM = Object.freeze({
 
 let wsTimeout = null;
 
-ws.onopen = evt =>{
-  wsTimeout = setTimeout(ping, 10000);
-
-  ws.onmessage = evt => {
-    let msg = JSON.parse(evt.data);
-    switch (msg.message_type) {
-      case MESSAGE_ENUM.PONG:
-        wsTimeout = setTimeout(ping, 10000);
-        break;
-      case MESSAGE_ENUM.CLIENT_UPDATE:
-        // update positions for all sprites
-        updatePlayers(msg.body.sockets);
-        break;
-      case MESSAGE_ENUM.CLIENT_CONNECTED:
-        logMessage(msg);
-        // update game state
-        addPlayer(msg.body);
-        // create sprite
-        createPlayerSprite(msg.body);
-        break;
-      case MESSAGE_ENUM.CLIENT_DISCONNECTED:
-        logMessage(msg);
-        // remove sprite
-        removePlayerSprite(msg.body);
-        // update game state
-        removePlayer(msg.body);
-        break;
-      case MESSAGE_ENUM.CLIENT_MESSAGE:
-        printMessage(msg);
-        break;
-      case MESSAGE_ENUM.SELF_CONNECTED:
-        selfData.id = msg.body.id;
-        selfData.name = msg.body.name;
-        selfData.char = msg.body.char;
-        selfData.pos = msg.body.pos;
-        DOM_EL.username.innerText = `You are ${selfData.name}`;
-        break;
-      default:
-        console.log("Unknown message type");
-    }
+export const setupWS = () => {
+  ws = new WebSocket("ws://127.0.0.1:7777/ws");
+  ws.onopen = evt =>{
+    wsTimeout = setTimeout(ping, 10000);
+  
+    ws.onmessage = evt => {
+      let msg = JSON.parse(evt.data);
+      switch (msg.message_type) {
+        case MESSAGE_ENUM.PONG:
+          wsTimeout = setTimeout(ping, 10000);
+          break;
+        case MESSAGE_ENUM.CLIENT_UPDATE:
+          // update positions for all sprites
+          updatePlayers(msg.body.sockets);
+          break;
+        case MESSAGE_ENUM.CLIENT_CONNECTED:
+          logMessage(msg);
+          // update game state
+          addPlayer(msg.body);
+          // create sprite
+          createPlayerSprite(msg.body);
+          break;
+        case MESSAGE_ENUM.CLIENT_DISCONNECTED:
+          logMessage(msg);
+          // remove sprite
+          removePlayerSprite(msg.body);
+          // update game state
+          removePlayer(msg.body);
+          break;
+        case MESSAGE_ENUM.CLIENT_MESSAGE:
+          printMessage(msg);
+          break;
+        case MESSAGE_ENUM.SELF_CONNECTED:
+          selfData.id = msg.body.self.id;
+          selfData.name = msg.body.self.name;
+          selfData.char = msg.body.self.char;
+          selfData.pos = msg.body.self.pos;
+          setupSelfChar();
+          syncStates(msg.body.sockets);
+          DOM_EL.username.innerText = `You are ${selfData.name}`;
+          break;
+        default:
+          console.log("Unknown message type");
+      }
+    };
   };
-};
+}
 
 const ping = () => {
   clearTimeout(wsTimeout);
