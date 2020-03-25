@@ -1,4 +1,4 @@
-import { DOM_EL, selfData } from '../index';
+import { DOM_EL, selfData, addPlayer, removePlayer, updatePlayers, createPlayerSprite, removePlayerSprite } from '../index';
 export const ws = new WebSocket("ws://127.0.0.1:7777/ws");
 
 const MESSAGE_ENUM = Object.freeze({
@@ -15,7 +15,6 @@ const MESSAGE_ENUM = Object.freeze({
 let wsTimeout = null;
 
 ws.onopen = evt =>{
-  console.log(evt.explicitOriginalTarget.url);
   wsTimeout = setTimeout(ping, 10000);
 
   ws.onmessage = evt => {
@@ -25,26 +24,32 @@ ws.onopen = evt =>{
         wsTimeout = setTimeout(ping, 10000);
         break;
       case MESSAGE_ENUM.CLIENT_UPDATE:
-        console.log(msg.body);
+        // update positions for all sprites
+        updatePlayers(msg.body.sockets);
         break;
       case MESSAGE_ENUM.CLIENT_CONNECTED:
-        console.log(msg.body);
         logMessage(msg);
+        // update game state
+        addPlayer(msg.body);
+        // create sprite
+        createPlayerSprite(msg.body);
         break;
       case MESSAGE_ENUM.CLIENT_DISCONNECTED:
-        console.log(msg.body);
         logMessage(msg);
+        // update game state
+        removePlayer(msg.body);
+        // remove sprite
+        removePlayerSprite(msg.body);
         break;
       case MESSAGE_ENUM.CLIENT_MESSAGE:
-        console.log(msg.body);
         printMessage(msg);
         break;
       case MESSAGE_ENUM.SELF_CONNECTED:
+        selfData.id = msg.body.id;
         selfData.name = msg.body.name;
         selfData.char = msg.body.char;
         selfData.pos = msg.body.pos;
         DOM_EL.username.innerText = `You are ${selfData.name}`;
-        console.log(selfData);
         break;
       default:
         console.log("Unknown message type");
@@ -64,8 +69,10 @@ export const sendPos = () => {
   let msg = {
     message_type: MESSAGE_ENUM.SELF_UPDATE,
     body: {
-      x: selfData.pos.x,
-      y: selfData.pos.y
+      pos: {
+        x: selfData.pos.x,
+        y: selfData.pos.y
+      }
     }
   }
 

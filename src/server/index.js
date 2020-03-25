@@ -45,6 +45,7 @@ const app = uWS.App()
       let socketMsg = {
         message_type: MESSAGE_ENUM.SELF_CONNECTED,
         body: {
+          id: ws.id,
           name: ws.name,
           char: ws.char,
           pos: ws.pos
@@ -72,7 +73,7 @@ const app = uWS.App()
       
       switch (clientMessage.message_type) {
         case MESSAGE_ENUM.SELF_UPDATE:
-          updatePos(ws, clientMessage.body.x, clientMessage.body.y);
+          updatePos(ws, clientMessage.body.pos.x, clientMessage.body.pos.y);
           break;
         case MESSAGE_ENUM.PING:
           serverMessage = {
@@ -131,11 +132,11 @@ function createName(randomInt) {
   `user-${randomInt}`
 }
 
-function updatePos(ws, xPos, yPos) {
+function updatePos(ws, x, y) {
   sockets.find((socket, index) => {
     if (socket && socket.id === ws.id) {
-      sockets[index].x = xPos;
-      sockets[index].y = yPos;
+      sockets[index].pos.x = x;
+      sockets[index].pos.y = y;
     }
   });
 }

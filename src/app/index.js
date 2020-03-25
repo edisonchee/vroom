@@ -18,7 +18,7 @@ let app = new PIXI.Application({
   resolution: 1,
 });
 
-const characters = [
+export const characters = [
   { name: "worm",
     startFrame: 1,
     endFrame: 4
@@ -46,6 +46,7 @@ const characters = [
 ];
 
 export let selfData = {
+  id: "",
   char: "",
   name: "",
   pos: {
@@ -54,7 +55,8 @@ export let selfData = {
   }
 }
 
-export let id, state, animatedSprite;
+let players = [];
+let id, state, animatedSprite;
 
 window.addEventListener('DOMContentLoaded', event => {
   DOM_EL.canvasContainer = document.getElementById("canvas-container");
@@ -67,18 +69,21 @@ window.addEventListener('DOMContentLoaded', event => {
   
   DOM_EL.canvasContainer.appendChild(app.view);
 
-  loader.add("static/assets/spritesheet.json")
-    .load((loader, resources) => {
-      id = resources["static/assets/spritesheet.json"].textures;
 
-      setup();
-    });
+  loader.add("static/assets/spritesheet.json")
+  .load((loader, resources) => {
+    id = resources["static/assets/spritesheet.json"].textures;
+    setup();
+  });
 });
 
 function setup() {
   let char = characters.find(character => character.name === selfData.char);
   animatedSprite = createAnimatedSprite(selfData.char, char.startFrame, char.endFrame);
+  console.log(animatedSprite);
+
   app.stage.addChild(animatedSprite);
+
   setInterval(sendPos, 1000);
 
   let left = keyboard("ArrowLeft"),
@@ -131,27 +136,52 @@ function setup() {
   };
 
   state = play;
-
   app.ticker.add(delta => gameLoop(delta));
 }
 
-function createAnimatedSprite(name, startFrame, endFrame) {
-    const frames = [];
-    let animatedSprite;
-  
-    for (let j = startFrame; j < endFrame + 1; j++) {
-      frames.push(PIXI.Texture.from(`${name}_${j}.png`));
+export function createPlayerSprite(socket) {
+  // don't create player sprite for myself again
+  if (socket.id !== selfData.id) {
+    let char = characters.find(character => character.name === socket.char);
+    let animatedSprite = createAnimatedSprite(socket.char, char.startFrame, char.endFrame);
+
+    // assign PIXI sprite to local state;
+    players.find(player => {
+      if (player.id === socket.id) {
+        player.sprite = animatedSprite;
+        // add to stage
+        app.stage.addChild(player.sprite);
+      }
+    })
+  }
+}
+
+export function removePlayerSprite(socket) {
+  players.find(player => {
+    if (player.id === socket.id) {
+      // remove from stage
+      app.stage.removeChild(player.sprite);
     }
-  
-    animatedSprite = new PIXI.AnimatedSprite(frames);
-    animatedSprite.x = app.screen.width / 2;
-    animatedSprite.y = app.screen.height / 2;
-    animatedSprite.vx = 0;
-    animatedSprite.vy = 0;
-    animatedSprite.anchor.set(0.5);
-    animatedSprite.animationSpeed = 0.05;
-    animatedSprite.play();
-    return animatedSprite;
+  })
+}
+
+function createAnimatedSprite(name, startFrame, endFrame) {
+  const frames = [];
+  let animatedSprite;
+
+  for (let j = startFrame; j < endFrame + 1; j++) {
+    frames.push(PIXI.Texture.from(`${name}_${j}.png`));
+  }
+
+  animatedSprite = new PIXI.AnimatedSprite(frames);
+  animatedSprite.x = app.screen.width / 2;
+  animatedSprite.y = app.screen.height / 2;
+  animatedSprite.vx = 0;
+  animatedSprite.vy = 0;
+  animatedSprite.anchor.set(0.5);
+  animatedSprite.animationSpeed = 0.05;
+  animatedSprite.play();
+  return animatedSprite;
 }
 
 function gameLoop(delta){
@@ -160,10 +190,18 @@ function gameLoop(delta){
 }
 
 function play(delta) {
+  // update sprite positions
   animatedSprite.x += animatedSprite.vx;
   animatedSprite.y += animatedSprite.vy;
+  // update self pos
   selfData.pos.x = animatedSprite.x;
   selfData.pos.y = animatedSprite.y;
+  //...
+  // for (let i = 0; i < players.length; i++) {
+  //   console.log("Updating player: ", players[i]);
+  //   players[i].sprite.x = players[i].pos.x;
+  //   players[i].sprite.y = players[i].pos.y;
+  // }
 }
 
 function keyboard(value) {
@@ -211,4 +249,34 @@ function keyboard(value) {
   };
   
   return key;
+}
+
+export function updatePlayers(socketsArr) {
+  // sync local state with server state
+  console.log(players);
+  for (let i = 0; i < socketsArr.length; i++) {
+    players.find(player => {
+      if (player.id === socketsArr[i].id && player.sprite) {
+        player.pos.x = socketsArr[i].pos.x;
+        player.pos.y = socketsArr[i].pos.y;
+        player.sprite.x = player.pos.x;
+        player.sprite.y = player.pos.y;
+      }
+    })
+  }
+}
+
+export function addPlayer(socket) {
+  let found = players.find(player => player.id === socket.id);
+  found ? '' : players.push(socket);
+  console.log(players);
+}
+
+export function removePlayer(socket) {
+  players.find((player, index) => { 
+    if (player.id === socket.id) {
+      players.splice(index, 1);
+    }
+  });
+  console.log(players);
 }
