@@ -18,9 +18,45 @@ let app = new PIXI.Application({
   resolution: 1,
 });
 
-export let id, state, animatedBlob;
+const characters = [
+  { name: "worm",
+    startFrame: 1,
+    endFrame: 4
+  },
+  { name: "blob",
+    startFrame: 1,
+    endFrame: 7
+  },
+  { name: "mosquito",
+    startFrame: 1,
+    endFrame: 6
+  },
+  { name: "spaceman",
+    startFrame: 1,
+    endFrame: 7
+  },
+  { name: "orange",
+    startFrame: 1,
+    endFrame: 5
+  },
+  { name: "croc",
+    startFrame: 1,
+    endFrame: 7
+  },
+];
 
-window.addEventListener('DOMContentLoaded', (event) => {
+export let selfData = {
+  char: "",
+  name: "",
+  pos: {
+    x: 0,
+    y: 0
+  }
+}
+
+export let id, state, animatedSprite;
+
+window.addEventListener('DOMContentLoaded', event => {
   DOM_EL.canvasContainer = document.getElementById("canvas-container");
   DOM_EL.username = document.getElementById("username");
   DOM_EL.chatLog = document.getElementById("chat-log");
@@ -40,8 +76,9 @@ window.addEventListener('DOMContentLoaded', (event) => {
 });
 
 function setup() {
-  animatedBlob = createAnimatedSprites("blob", 1, 7);
-  app.stage.addChild(animatedBlob);
+  let char = characters.find(character => character.name === selfData.char);
+  animatedSprite = createAnimatedSprite(selfData.char, char.startFrame, char.endFrame);
+  app.stage.addChild(animatedSprite);
   setInterval(sendPos, 1000);
 
   let left = keyboard("ArrowLeft"),
@@ -50,46 +87,46 @@ function setup() {
       down = keyboard("ArrowDown");
 
   left.press = () => {
-    animatedBlob.vx = -5;
-    animatedBlob.vy = 0;
+    animatedSprite.vx = -5;
+    animatedSprite.vy = 0;
   }
 
   left.release = () => {
-    if (!right.isDown && animatedBlob.vy === 0) {
-      animatedBlob.vx = 0;
+    if (!right.isDown && animatedSprite.vy === 0) {
+      animatedSprite.vx = 0;
     }
   };
 
   right.press = () => {
-    animatedBlob.vx = 5;
-    animatedBlob.vy = 0;
+    animatedSprite.vx = 5;
+    animatedSprite.vy = 0;
   }
 
   right.release = () => {
-    if (!left.isDown && animatedBlob.vy === 0) {
-      animatedBlob.vx = 0;
+    if (!left.isDown && animatedSprite.vy === 0) {
+      animatedSprite.vx = 0;
     }
   };
 
   up.press = () => {
-    animatedBlob.vy = -5;
-    animatedBlob.vx = 0;
+    animatedSprite.vy = -5;
+    animatedSprite.vx = 0;
   }
 
   up.release = () => {
-    if (!down.isDown && animatedBlob.vx === 0) {
-      animatedBlob.vy = 0;
+    if (!down.isDown && animatedSprite.vx === 0) {
+      animatedSprite.vy = 0;
     }
   };
 
   down.press = () => {
-    animatedBlob.vy = 5;
-    animatedBlob.vx = 0;
+    animatedSprite.vy = 5;
+    animatedSprite.vx = 0;
   }
 
   down.release = () => {
-    if (!up.isDown && animatedBlob.vx === 0) {
-      animatedBlob.vy = 0;
+    if (!up.isDown && animatedSprite.vx === 0) {
+      animatedSprite.vy = 0;
     }
   };
 
@@ -98,24 +135,23 @@ function setup() {
   app.ticker.add(delta => gameLoop(delta));
 }
 
-function createAnimatedSprites(name, startFrame, endFrame) {
-  const frames = [];
-  var animatedSprite;
-
-  for (var i = startFrame; i < endFrame + 1; i++) {
-    frames.push(PIXI.Texture.from(`${name}_${i}.png`));
-  }
-
-  animatedSprite = new PIXI.AnimatedSprite(frames);
-  animatedSprite.x = app.screen.width / 2;
-  animatedSprite.y = app.screen.height / 2;
-  animatedSprite.vx = 0;
-  animatedSprite.vy = 0;
-  animatedSprite.anchor.set(0.5);
-  animatedSprite.animationSpeed = 0.05;
-  animatedSprite.play();
-
-  return animatedSprite;
+function createAnimatedSprite(name, startFrame, endFrame) {
+    const frames = [];
+    let animatedSprite;
+  
+    for (let j = startFrame; j < endFrame + 1; j++) {
+      frames.push(PIXI.Texture.from(`${name}_${j}.png`));
+    }
+  
+    animatedSprite = new PIXI.AnimatedSprite(frames);
+    animatedSprite.x = app.screen.width / 2;
+    animatedSprite.y = app.screen.height / 2;
+    animatedSprite.vx = 0;
+    animatedSprite.vy = 0;
+    animatedSprite.anchor.set(0.5);
+    animatedSprite.animationSpeed = 0.05;
+    animatedSprite.play();
+    return animatedSprite;
 }
 
 function gameLoop(delta){
@@ -124,8 +160,10 @@ function gameLoop(delta){
 }
 
 function play(delta) {
-  animatedBlob.x += animatedBlob.vx;
-  animatedBlob.y += animatedBlob.vy
+  animatedSprite.x += animatedSprite.vx;
+  animatedSprite.y += animatedSprite.vy;
+  selfData.pos.x = animatedSprite.x;
+  selfData.pos.y = animatedSprite.y;
 }
 
 function keyboard(value) {

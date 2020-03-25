@@ -1,4 +1,4 @@
-import { DOM_EL, animatedBlob } from '../index';
+import { DOM_EL, selfData } from '../index';
 export const ws = new WebSocket("ws://127.0.0.1:7777/ws");
 
 const MESSAGE_ENUM = Object.freeze({
@@ -40,7 +40,11 @@ ws.onopen = evt =>{
         printMessage(msg);
         break;
       case MESSAGE_ENUM.SELF_CONNECTED:
-        DOM_EL.username.innerText = `You are ${msg.body.name}`;
+        selfData.name = msg.body.name;
+        selfData.char = msg.body.char;
+        selfData.pos = msg.body.pos;
+        DOM_EL.username.innerText = `You are ${selfData.name}`;
+        console.log(selfData);
         break;
       default:
         console.log("Unknown message type");
@@ -60,8 +64,8 @@ export const sendPos = () => {
   let msg = {
     message_type: MESSAGE_ENUM.SELF_UPDATE,
     body: {
-      x: animatedBlob.x,
-      y: animatedBlob.y
+      x: selfData.pos.x,
+      y: selfData.pos.y
     }
   }
 

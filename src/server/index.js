@@ -15,6 +15,8 @@ const MESSAGE_ENUM = Object.freeze({
   PONG: "PONG"
 })
 
+const charNames = ["blob", "croc", "mosquito", "orange", "spaceman", "worm"]
+
 let sockets = [];
 
 const app = uWS.App()
@@ -26,6 +28,7 @@ const app = uWS.App()
     open: (ws, req) => {
       ws.id = uuid();
       ws.name = createName(getRandomInt());
+      ws.char = charNames[Math.floor(Math.random() * charNames.length)];
       ws.pos = {
         x: 0,
         y: 0
@@ -42,7 +45,9 @@ const app = uWS.App()
       let socketMsg = {
         message_type: MESSAGE_ENUM.SELF_CONNECTED,
         body: {
-          name: ws.name
+          name: ws.name,
+          char: ws.char,
+          pos: ws.pos
         }
       }
 
@@ -50,7 +55,9 @@ const app = uWS.App()
         message_type: MESSAGE_ENUM.CLIENT_CONNECTED,
         body: {
           id: ws.id,
-          name: ws.name
+          name: ws.name,
+          char: ws.char,
+          pos: ws.pos
         }
       }
 
