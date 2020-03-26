@@ -1,6 +1,6 @@
 const uWS = require('./uws.js');
 const { uuid } = require('uuidv4');
-const port = 7777;
+const port = 8888;
 
 const decoder = new TextDecoder('utf-8');
 

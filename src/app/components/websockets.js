@@ -16,7 +16,7 @@ const MESSAGE_ENUM = Object.freeze({
 let wsTimeout = null;
 
 export const setupWS = () => {
-  ws = new WebSocket("ws://127.0.0.1:7777/ws");
+  ws = new WebSocket("ws://127.0.0.1:8888/ws");
   ws.onopen = evt =>{
     wsTimeout = setTimeout(ping, 10000);
   
