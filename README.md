@@ -51,6 +51,7 @@ const app = uWS.SSLApp({
 Then configure nginx reverse proxy for websockets accordingly.
 
 ## Todo
+- Don't send coordinates if no movement
 - Auto scroll to bottom on new message
 - Send on 'Enter'
 - Enable mic input and change sprite when voice detected (for use with other voice chatting software)
