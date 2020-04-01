@@ -108,6 +108,7 @@ const printMessage = msg => {
   listEl.appendChild(textSpanEl);
 
   DOM_EL.chatLog.appendChild(listEl);
+  listEl.scrollIntoView();
 }
 
 const logMessage = msg => {

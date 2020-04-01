@@ -240,6 +240,13 @@ function assignReferences() {
 
 function attachListeners() {
   DOM_EL.chatInputButton.addEventListener('click', sendMessage);
+  DOM_EL.chatInput.addEventListener('keydown', handleKeyDown);
+}
+
+function handleKeyDown(evt) {
+  evt.key === 'Enter' && 
+  DOM_EL.chatInput.value !== '' &&
+  DOM_EL.chatInput.value.trim() !== '' ? sendMessage() : '';
 }
 
 function loadAssets() {

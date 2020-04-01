@@ -52,11 +52,11 @@ Then configure nginx reverse proxy for websockets accordingly.
 
 ## Todo
 - Don't send coordinates if no movement
-- Auto scroll to bottom on new message
-- Send on 'Enter'
 - Enable mic input and change sprite when voice detected (for use with other voice chatting software)
 - If not, build our own WebRTC audio with relay server (MCU or SFU?)
 - Ephemeral text messaging
 - Pixi text sprites for usernames to follow user's character
 - Allow users to change username
 - World objects for further interactions e.g. mic stand
+- ~~Auto scroll to bottom on new message~~
+- ~~Send on 'Enter'~~
